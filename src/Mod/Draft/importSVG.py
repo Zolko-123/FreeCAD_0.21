@@ -933,7 +933,7 @@ class svgHandler(xml.sax.ContentHandler):
             _command = '\\s*?' + _op + '\\s*?' + _op2 + '\\s*?'
             pathcommandsre = re.compile(_command, re.DOTALL)
 
-           _num = '[-+]?[0-9]*\\.?[0-9]+'
+            _num = '[-+]?[0-9]*\\.?[0-9]+'
             _exp = '([eE][-+]?[0-9]+)?'
             _point = '(' + _num + _exp + ')'
             pointsre = re.compile(_point, re.DOTALL)
