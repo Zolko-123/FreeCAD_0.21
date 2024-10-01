@@ -374,8 +374,8 @@ Dock widget
 ==================================================================================================*/
 QDockWidget {
     color: #D2D8E1; /*Titlebar Text*/
-    titlebar-close-icon: url(qss:images_dark-light/close_dark.svg);
-    titlebar-normal-icon: url(qss:images_dark-light/undock_dark.svg);
+    titlebar-close-icon: url(qss:images_dark-light/close_light.svg);
+    titlebar-normal-icon: url(qss:images_dark-light/undock_light.svg);
 }
 
 QDockWidget::title {
@@ -405,7 +405,7 @@ QDockWidget::float-button {
 
 QDockWidget::close-button:hover,
 QDockWidget::float-button:hover {
-    background-color: rgba(255,255,255,15);
+    background-color: rgba(100, 149, 237, 55);
 }
 
 QDockWidget::close-button:pressed,
