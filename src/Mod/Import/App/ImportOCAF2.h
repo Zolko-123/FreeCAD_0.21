@@ -35,11 +35,14 @@
 #include <XCAFDoc_ColorTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 
+#include <Standard_Version.hxx>
+
 #include <Base/Sequencer.h>
 #include <Mod/Part/App/TopoShape.h>
 
 #include "ImportOCAF.h"
 #include "ExportOCAF.h"
+
 
 
 class TDF_Label;
@@ -56,14 +59,22 @@ class Feature;
 namespace Import {
 
 struct ShapeHasher {
-    std::size_t operator()(const TopoDS_Shape &s) const {
-        return s.HashCode(INT_MAX);
+    std::size_t operator()(const TopoDS_Shape& shape) const {
+#if OCC_VERSION_HEX >= 0x070800
+        return std::hash<TopoDS_Shape> {}(shape);
+#else
+        return shape.HashCode(INT_MAX);
+#endif
     }
 };
 
 struct LabelHasher {
-    std::size_t operator()(const TDF_Label &l) const {
-        return TDF_LabelMapHasher::HashCode(l,INT_MAX);
+    std::size_t operator()(const TDF_Label& label) const {
+#if OCC_VERSION_HEX >= 0x070800
+        return std::hash<TDF_Label> {}(label);
+#else
+        return TDF_LabelMapHasher::HashCode(label, INT_MAX);
+#endif
     }
 };
 
