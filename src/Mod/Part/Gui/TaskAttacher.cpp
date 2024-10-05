@@ -987,7 +987,8 @@ void TaskAttacher::visibilityAutomation(bool opening_not_closing)
         else if (!postfix.empty()) {
             QString code = QString::fromLatin1(
                 "_tv_%1.restore()\n"
-                "del(_tv_%1)"
+                "del(_tv_%1)\n"
+                "App.activeDocument().recompute(None,True,True)"
                 ).arg(QString::fromLatin1(postfix.c_str()));
             Gui::Command::runCommand(Gui::Command::Gui,code.toLatin1().constData());
         }
