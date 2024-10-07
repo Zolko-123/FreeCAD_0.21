@@ -147,7 +147,7 @@ public:
 
             static const char* sketchArchType = "Sketcher::SketchObjectPython";
 
-            if (obj->is<Sketcher::SketchObject>()
+            if (obj->getTypeId() == Sketcher::SketchObject::getClassTypeId()
                 || strcmp(obj->getTypeId().getName(), sketchArchType) == 0) {
 
                 try {
