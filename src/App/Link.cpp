@@ -47,7 +47,7 @@ FC_LOG_LEVEL_INIT("App::Link", true,true)
 
 using namespace App;
 using namespace Base;
-namespace sp = std::placeholders;
+namespace bp = boost::placeholders;
 
 using CharRange = boost::iterator_range<const char*>;
 
@@ -81,7 +81,8 @@ public:
     }
 
     // Auto generated code. See class document of LinkParams.
-    ~LinkParamsP() override = default;
+    ~LinkParamsP() override {
+    }
 
     // Auto generated code. See class document of LinkParams.
     void OnChange(Base::Subject<const char*> &, const char* sReason) override {
@@ -148,6 +149,7 @@ void LinkParams::removeCopyOnChangeApplyToAll() {
 EXTENSION_PROPERTY_SOURCE(App::LinkBaseExtension, App::DocumentObjectExtension)
 
 LinkBaseExtension::LinkBaseExtension()
+    :enableLabelCache(false),hasOldSubElement(false),hasCopyOnChange(true)
 {
     initExtensionType(LinkBaseExtension::getExtensionClassTypeId());
     EXTENSION_ADD_PROPERTY_TYPE(_LinkTouched, (false), " Link",
@@ -158,6 +160,10 @@ LinkBaseExtension::LinkBaseExtension()
     EXTENSION_ADD_PROPERTY_TYPE(_LinkOwner, (0), " Link",
             PropertyType(Prop_Hidden|Prop_Output),0);
     props.resize(PropMax,nullptr);
+}
+
+LinkBaseExtension::~LinkBaseExtension()
+{
 }
 
 PyObject* LinkBaseExtension::getExtensionPyObject() {
@@ -237,13 +243,9 @@ void LinkBaseExtension::setProperty(int idx, Property *prop) {
             propEnum->setEnums(enums);
         break;
     }
+    case PropLinkCopyOnChangeTouched:
     case PropLinkCopyOnChangeSource:
     case PropLinkCopyOnChangeGroup:
-        if (auto linkProp = Base::freecad_dynamic_cast<PropertyLinkBase>(prop)) {
-            linkProp->setScope(LinkScope::Global);
-        }
-        // fall through
-    case PropLinkCopyOnChangeTouched:
         prop->setStatus(Property::Hidden, true);
         break;
     case PropLinkTransform:
@@ -265,13 +267,9 @@ void LinkBaseExtension::setProperty(int idx, Property *prop) {
     case PropLinkedObject:
         // Make ElementList as read-only if we are not a group (i.e. having
         // LinkedObject property), because it is for holding array elements.
-        if(getElementListProperty()) {
+        if(getElementListProperty())
             getElementListProperty()->setStatus(
                 Property::Immutable, getLinkedObjectProperty() != nullptr);
-        }
-        if (auto linkProp = getLinkedObjectProperty()) {
-            linkProp->setScope(LinkScope::Global);
-        }
         break;
     case PropVisibilityList:
         getVisibilityListProperty()->setStatus(Property::Immutable, true);
@@ -325,12 +323,6 @@ App::DocumentObjectExecReturn *LinkBaseExtension::extensionExecute() {
                    && getLinkCopyOnChangeTouchedValue())
         {
             syncCopyOnChange();
-        }
-
-        // the previous linked object could be deleted by syncCopyOnChange - #12281
-        linked = getTrueLinkedObject(true);
-        if(!linked) {
-            return new App::DocumentObjectExecReturn("Error in processing variable link");
         }
 
         PropertyPythonObject *proxy = nullptr;
@@ -482,7 +474,7 @@ void LinkBaseExtension::setOnChangeCopyObject(
         }
     }
 
-    const char *key = flags.testFlag(OnChangeCopyOptions::ApplyAll) ? "*" : parent->getDagKey();
+    const char *key = flags.testFlag(OnChangeCopyOptions::ApplyAll) ? "*" : parent->getNameInDocument();
     if (external)
         prop->setValue(key, exclude ? "" : "+");
     else
@@ -532,7 +524,7 @@ void LinkBaseExtension::syncCopyOnChange()
             // to match the possible new copy later.
             objs = copyOnChangeGroup->ElementList.getValues();
             for (auto obj : objs) {
-                if (!obj->isAttachedToDocument())
+                if (!obj->getNameInDocument())
                     continue;
                 auto prop = Base::freecad_dynamic_cast<PropertyUUID>(
                         obj->getPropertyByName("_SourceUUID"));
@@ -591,8 +583,8 @@ void LinkBaseExtension::syncCopyOnChange()
     // the mutated object. The reason for doing so is that we are copying from
     // the original linked object and its dependency, not the mutated objects
     // which are old copies. There could be arbitrary changes in the originals
-    // which may add or remove or change depending orders, while the
-    // replacement happens between the new and old copies.
+    // which may add or remove or change dependending orders, while the
+    // replacement happen between the new and old copies.
 
     std::map<Base::Uuid, App::DocumentObjectT> newObjs;
     for (auto obj : copiedObjs) {
@@ -886,7 +878,7 @@ App::DocumentObject *LinkBaseExtension::makeCopyOnChange() {
 
     if (auto prop = getLinkCopyOnChangeGroupProperty()) {
         if (auto obj = prop->getValue()) {
-            if (obj->isAttachedToDocument() && obj->getDocument())
+            if (obj->getNameInDocument() && obj->getDocument())
                 obj->getDocument()->removeObject(obj->getNameInDocument());
         }
         auto group = new LinkGroup;
@@ -1102,7 +1094,7 @@ int LinkBaseExtension::getElementIndex(const char *subname, const char **psubnam
         // pattern, which is the owner object name + "_i" + index
         const char *name = subname[0]=='$'?subname+1:subname;
         auto owner = getContainer();
-        if(owner && owner->isAttachedToDocument()) {
+        if(owner && owner->getNameInDocument()) {
             std::string ownerName(owner->getNameInDocument());
             ownerName += '_';
             if(boost::algorithm::starts_with(name,ownerName.c_str())) {
@@ -1122,7 +1114,7 @@ int LinkBaseExtension::getElementIndex(const char *subname, const char **psubnam
             // Then check for the actual linked object's name or label, and
             // redirect that reference to the first array element
             auto linked = getTrueLinkedObject(false);
-            if(!linked || !linked->isAttachedToDocument())
+            if(!linked || !linked->getNameInDocument())
                 return -1;
             if(subname[0]=='$') {
                 CharRange sub(subname+1, dot);
@@ -1147,7 +1139,7 @@ int LinkBaseExtension::getElementIndex(const char *subname, const char **psubnam
         // Try search by element objects' name
         std::string name(subname,dot);
         if(_ChildCache.getSize()) {
-            auto obj=_ChildCache.findUsingMap(name,&idx);
+            auto obj=_ChildCache.find(name,&idx);
             if(obj) {
                 auto group = obj->getExtensionByType<GroupExtension>(true,false);
                 if(group) {
@@ -1237,7 +1229,7 @@ Base::Matrix4D LinkBaseExtension::getTransform(bool transform) const {
 bool LinkBaseExtension::extensionGetSubObjects(std::vector<std::string> &ret, int reason) const {
     if(!getLinkedObjectProperty() && getElementListProperty()) {
         for(auto obj : getElementListProperty()->getValues()) {
-            if(obj && obj->isAttachedToDocument()) {
+            if(obj && obj->getNameInDocument()) {
                 std::string name(obj->getNameInDocument());
                 name+='.';
                 ret.push_back(name);
@@ -1317,7 +1309,7 @@ bool LinkBaseExtension::extensionGetSubObject(DocumentObject *&ret, const char *
     if(idx>=0) {
         const auto &elements = _getElementListValue();
         if(!elements.empty()) {
-            if(idx>=(int)elements.size() || !elements[idx] || !elements[idx]->isAttachedToDocument())
+            if(idx>=(int)elements.size() || !elements[idx] || !elements[idx]->getNameInDocument())
                 return true;
             ret = elements[idx]->getSubObject(subname,pyObj,mat,true,depth+1);
             // do not resolve the link if this element is the last referenced object
@@ -1420,9 +1412,8 @@ void LinkBaseExtension::checkGeoElementMap(const App::DocumentObject *obj,
        !PyObject_TypeCheck(*pyObj, &Data::ComplexGeoDataPy::Type))
         return;
 
-//     auto geoData = static_cast<Data::ComplexGeoDataPy*>(*pyObj)->getComplexGeoDataPtr();
-//     geoData->reTagElementMap(obj->getID(),obj->getDocument()->Hasher,postfix);
-
+    // auto geoData = static_cast<Data::ComplexGeoDataPy*>(*pyObj)->getComplexGeoDataPtr();
+    // geoData->reTagElementMap(obj->getID(),obj->getDocument()->Hasher,postfix);
 }
 
 void LinkBaseExtension::onExtendedUnsetupObject() {
@@ -1430,7 +1421,7 @@ void LinkBaseExtension::onExtendedUnsetupObject() {
         return;
     detachElements();
     if (auto obj = getLinkCopyOnChangeGroupValue()) {
-        if(obj->isAttachedToDocument() && !obj->isRemoving())
+        if(obj->getNameInDocument() && !obj->isRemoving())
             obj->getDocument()->removeObject(obj->getNameInDocument());
     }
 }
@@ -1455,7 +1446,7 @@ DocumentObject *LinkBaseExtension::getTrueLinkedObject(
     }
     if(ret && recurse)
         ret = ret->getLinkedObject(recurse,mat,transform,depth+1);
-    if(ret && !ret->isAttachedToDocument())
+    if(ret && !ret->getNameInDocument())
         return nullptr;
     return ret;
 }
@@ -1529,7 +1520,7 @@ void LinkBaseExtension::updateGroup() {
         groupSet.insert(group->getExtendedObject());
     }else{
         for(auto o : getElementListProperty()->getValues()) {
-            if(!o || !o->isAttachedToDocument())
+            if(!o || !o->getNameInDocument())
                 continue;
             auto ext = o->getExtensionByType<GroupExtension>(true,false);
             if(ext) {
@@ -1548,10 +1539,8 @@ void LinkBaseExtension::updateGroup() {
             if(!conn.connected()) {
                 FC_LOG("new group connection " << getExtendedObject()->getFullName()
                         << " -> " << group->getFullName());
-                //NOLINTBEGIN
                 conn = group->signalChanged.connect(
-                        std::bind(&LinkBaseExtension::slotChangedPlainGroup,this,sp::_1,sp::_2));
-                //NOLINTEND
+                        boost::bind(&LinkBaseExtension::slotChangedPlainGroup,this,bp::_1,bp::_2));
             }
             std::size_t count = children.size();
             ext->getAllChildren(children,childSet);
@@ -1564,10 +1553,8 @@ void LinkBaseExtension::updateGroup() {
                 if(!conn.connected()) {
                     FC_LOG("new group connection " << getExtendedObject()->getFullName()
                             << " -> " << child->getFullName());
-                    //NOLINTBEGIN
                     conn = child->signalChanged.connect(
-                            std::bind(&LinkBaseExtension::slotChangedPlainGroup,this,sp::_1,sp::_2));
-                    //NOLINTEND
+                            boost::bind(&LinkBaseExtension::slotChangedPlainGroup,this,bp::_1,bp::_2));
                 }
             }
         }
@@ -1624,8 +1611,8 @@ void LinkBaseExtension::update(App::DocumentObject *parent, const Property *prop
             placements.reserve(objs.size());
             std::vector<Base::Vector3d> scales;
             scales.reserve(objs.size());
-            for(auto obj : objs) {
-                auto element = freecad_dynamic_cast<LinkElement>(obj);
+            for(size_t i=0;i<objs.size();++i) {
+                auto element = freecad_dynamic_cast<LinkElement>(objs[i]);
                 if(element) {
                     placements.push_back(element->Placement.getValue());
                     scales.push_back(element->getScaleVector());
@@ -1651,7 +1638,7 @@ void LinkBaseExtension::update(App::DocumentObject *parent, const Property *prop
                 getScaleListProperty()->setValue(scales);
 
             for(auto obj : objs) {
-                if(obj && obj->isAttachedToDocument())
+                if(obj && obj->getNameInDocument())
                     obj->getDocument()->removeObject(obj->getNameInDocument());
             }
         }
@@ -1749,7 +1736,7 @@ void LinkBaseExtension::update(App::DocumentObject *parent, const Property *prop
                 }
                 getElementListProperty()->setValue(objs);
                 for(auto obj : tmpObjs) {
-                    if(obj && obj->isAttachedToDocument())
+                    if(obj && obj->getNameInDocument())
                         obj->getDocument()->removeObject(obj->getNameInDocument());
                 }
             }
@@ -1874,7 +1861,7 @@ void LinkBaseExtension::cacheChildLabel(int enable) const {
 
     int idx = 0;
     for(auto child : _getElementListValue()) {
-        if(child && child->isAttachedToDocument())
+        if(child && child->getNameInDocument())
             myLabelCache[child->Label.getStrValue()] = idx;
         ++idx;
     }
@@ -1896,8 +1883,8 @@ void LinkBaseExtension::syncElementList() {
     auto owner = getContainer();
     auto ownerID = owner?owner->getID():0;
     auto elements = getElementListValue();
-    for (auto i : elements) {
-        auto element = freecad_dynamic_cast<LinkElement>(i);
+    for (size_t i = 0; i < elements.size(); ++i) {
+        auto element = freecad_dynamic_cast<LinkElement>(elements[i]);
         if (!element
             || (element->_LinkOwner.getValue()
                 && element->_LinkOwner.getValue() != ownerID))
@@ -2036,7 +2023,7 @@ void LinkBaseExtension::setLink(int index, DocumentObject *obj,
                     objs.push_back(elements[i]);
             }
             getElementListProperty()->setValue(objs);
-        }else if(!obj->isAttachedToDocument())
+        }else if(!obj->getNameInDocument())
             LINK_THROW(Base::ValueError,"Invalid object");
         else{
             if(index>(int)elements.size())
@@ -2090,7 +2077,7 @@ void LinkBaseExtension::setLink(int index, DocumentObject *obj,
 
     auto xlink = freecad_dynamic_cast<PropertyXLink>(linkProp);
     if(obj) {
-        if(!obj->isAttachedToDocument())
+        if(!obj->getNameInDocument())
             LINK_THROW(Base::ValueError,"Invalid document object");
         if(!xlink) {
             if(parent && obj->getDocument()!=parent->getDocument())
@@ -2128,7 +2115,7 @@ void LinkBaseExtension::detachElements()
 }
 
 void LinkBaseExtension::detachElement(DocumentObject *obj) {
-    if(!obj || !obj->isAttachedToDocument() || obj->isRemoving())
+    if(!obj || !obj->getNameInDocument() || obj->isRemoving())
         return;
     auto ext = obj->getExtensionByType<LinkBaseExtension>(true);
     auto owner = getContainer();
@@ -2244,6 +2231,10 @@ LinkExtension::LinkExtension()
     LINK_PROPS_ADD_EXTENSION(LINK_PARAMS_EXT);
 }
 
+LinkExtension::~LinkExtension()
+{
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 namespace App {
@@ -2267,16 +2258,6 @@ Link::Link() {
 
 bool Link::canLinkProperties() const {
     return true;
-}
-
-bool Link::isLink() const
-{
-    return ElementCount.getValue() == 0;
-}
-
-bool Link::isLinkGroup() const
-{
-    return ElementCount.getValue() > 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -2304,29 +2285,6 @@ bool LinkElement::canDelete() const {
 
     auto owner = getContainer();
     return !owner || !owner->getDocument()->getObjectByID(_LinkOwner.getValue());
-}
-
-bool LinkElement::isLink() const
-{
-    return true;
-}
-
-App::Link* LinkElement::getLinkGroup() const
-{
-    std::vector<App::DocumentObject*> inList = getInList();
-    for (auto* obj : inList) {
-        auto* link = dynamic_cast<App::Link*>(obj);
-        if (!link) {
-            continue;
-        }
-        std::vector<App::DocumentObject*> elts = link->ElementList.getValues();
-        for (auto* elt : elts) {
-            if (elt == this) {
-                return link;
-            }
-        }
-    }
-    return nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
