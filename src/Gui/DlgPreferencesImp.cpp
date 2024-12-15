@@ -322,29 +322,21 @@ void DlgPreferencesImp::activateGroupPage(const QString& group, int index)
  */
 void DlgPreferencesImp::activateGroupPageByPageName(const QString& group, const QString& pageName)
 {
-
-    for (int i = 0; i < ui->groupWidgetStack->count(); i++) {
-        auto* pageStackWidget = qobject_cast<QStackedWidget*>(ui->groupWidgetStack->widget(i));
-
-        if (!pageStackWidget) {
-            continue;
-        }
-
-        if (pageStackWidget->property(GroupNameProperty).toString() == group) {
-            ui->groupWidgetStack->setCurrentWidget(pageStackWidget);
-            for (int pageIdx = 0; pageIdx < pageStackWidget->count(); pageIdx++) {
-                auto page = qobject_cast<PreferencePage*>(pageStackWidget->widget(pageIdx));
-                if (page) {
-                    if (page->property(PageNameProperty).toString() == pageName) {
-                        pageStackWidget->setCurrentIndex(pageIdx);
+    int ct = ui->listBox->count();
+    for (int i=0; i<ct; i++) {
+        QListWidgetItem* item = ui->listBox->item(i);
+        if (item->data(GroupNameRole).toString() == group) {
+            ui->listBox->setCurrentItem(item);
+            auto tabWidget = dynamic_cast<QTabWidget*>(ui->tabWidgetStack->widget(i));
+            if (tabWidget) {
+                for (int pageNumber = 0; pageNumber < tabWidget->count(); pageNumber++) {
+                    auto prefPage = qobject_cast<PreferencePage*>(tabWidget->widget(pageNumber));
+                    if (prefPage && prefPage->property("PageName").toString() == pageName) {
+                        tabWidget->setCurrentIndex(pageNumber);
                         break;
                     }
                 }
             }
-
-            updatePageDependentWidgets();
-
-            return;
         }
     }
 }
