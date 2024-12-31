@@ -435,13 +435,29 @@ class PackageListItemDelegate(QtWidgets.QStyledItemDelegate):
         elif repo.status() == Addon.Status.NO_UPDATE_AVAILABLE:
             result = translate("AddonsInstaller", "Up-to-date")
         elif repo.status() == Addon.Status.UPDATE_AVAILABLE:
-            result = translate("AddonsInstaller", "Update available")
+            style = "style='color:" + utils.warning_color_string() + ";'"
+            result += (
+                f"<span {style}> "
+                + translate("AddonsInstaller", "Update available")
+                + "</span>"
+            )
         elif repo.status() == Addon.Status.PENDING_RESTART:
-            result = translate("AddonsInstaller", "Pending restart")
+            style = "style='color:" + utils.warning_color_string() + "; font:italic;'"
+            result += (
+                f"<span {style}> "
+                + translate("AddonsInstaller", "Pending restart")
+                + "</span>"
+            )
 
         if repo.is_disabled():
-            style = "style='color:" + utils.warning_color_string() + "; font-weight:bold;'"
-            result += f"<span {style}> [" + translate("AddonsInstaller", "DISABLED") + "]</span>"
+            style = (
+                "style='color:" + utils.warning_color_string() + "; font-weight:bold;'"
+            )
+            result += (
+                f"<span {style}> ["
+                + translate("AddonsInstaller", "DISABLED")
+                + "]</span>"
+            )
 
         return result
 
@@ -485,7 +501,12 @@ class PackageListItemDelegate(QtWidgets.QStyledItemDelegate):
             result += installed_version_string
             result += installed_date_string
         elif repo.status() == Addon.Status.NO_UPDATE_AVAILABLE:
-            result = translate("AddonsInstaller", "Up-to-date")
+            style = "style='color:" + utils.warning_color_string() + ";'"
+            result += (
+                f"<span {style}> "
+                + translate("AddonsInstaller", "Update available")
+                + "</span>"
+            )
             result += installed_version_string
             result += installed_date_string
         elif repo.status() == Addon.Status.UPDATE_AVAILABLE:
@@ -494,12 +515,21 @@ class PackageListItemDelegate(QtWidgets.QStyledItemDelegate):
             result += installed_date_string
             result += available_version_string
         elif repo.status() == Addon.Status.PENDING_RESTART:
-            result = translate("AddonsInstaller", "Pending restart")
+            style = "style='color:" + utils.warning_color_string() + "; font:italic;'"
+            result += (
+                f"<span {style}> "
+                + translate("AddonsInstaller", "Pending restart")
+                + "</span>"
+            )
 
         if repo.is_disabled():
-            style = "style='color:" + utils.warning_color_string() + "; font-weight:bold;'"
+            style = (
+                "style='color:" + utils.warning_color_string() + "; font-weight:bold;'"
+            )
             result += (
-                f"<br/><span {style}>[" + translate("AddonsInstaller", "DISABLED") + "]</span>"
+                f"<br/><span {style}>["
+                + translate("AddonsInstaller", "DISABLED")
+                + "]</span>"
             )
 
         return result
@@ -760,7 +790,7 @@ class Ui_PackageList:
             3,
             QtCore.QCoreApplication.translate("AddonsInstaller", "Preference Packs", None),
         )
-        self.labelStatus.setText(
+        self.labelPackagesStatus.setText(
             QtCore.QCoreApplication.translate("AddonsInstaller", "Status:", None)
         )
         self.comboStatus.setItemText(
