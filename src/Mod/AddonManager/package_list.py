@@ -700,10 +700,10 @@ class Ui_PackageList:
 
         self.horizontalLayout_6.addWidget(self.comboPackageType)
 
-        self.labelStatus = QtWidgets.QLabel(form)
-        self.labelStatus.setObjectName("labelStatus")
+        self.labelPackagesStatus = QtWidgets.QLabel(form)
+        self.labelPackagesStatus.setObjectName("labelPackagesStatus")
 
-        self.horizontalLayout_6.addWidget(self.labelStatus)
+        self.horizontalLayout_6.addWidget(self.labelPackagesStatus)
 
         self.comboStatus = QtWidgets.QComboBox(form)
         self.comboStatus.addItem("")
