@@ -605,12 +605,11 @@ void SIM::Coin3D::Quarter::SoQTQuarterAdaptor::resetToHomePosition()
 }
 
 
-void SIM::Coin3D::Quarter::SoQTQuarterAdaptor::draw2DString(
-    const char* str, SbVec2s glsize, SbVec2f position, double colRed = 1.0F, double colGreen = 1.0F,
-    double colBlue = 0.0F)// retains yellow as default color
+void
+SIM::Coin3D::Quarter::SoQTQuarterAdaptor::draw2DString(const char* str, SbVec2s glsize, SbVec2f position, double colRed = 1.0F, double colGreen = 1.0F, double colBlue = 0.0F) // retains yellow as default color
 {
     // Store GL state.
-    glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT);
+    glPushAttrib(GL_ENABLE_BIT|GL_CURRENT_BIT);
 
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
@@ -628,15 +627,15 @@ void SIM::Coin3D::Quarter::SoQTQuarterAdaptor::draw2DString(
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    //   glColor3f(0.0, 0.0, 0.0);
-    //   glRasterPos2f(position[0] + 1, position[1]);
-    //   printString(str);
-    //   glRasterPos2f(position[0] - 1, position[1]);
-    //   printString(str);
-    //   glRasterPos2f(position[0], position[1] + 1);
-    //   printString(str);
-    //   glRasterPos2f(position[0], position[1] - 1);
-    //   printString(str);
+//   glColor3f(0.0, 0.0, 0.0);
+//   glRasterPos2f(position[0] + 1, position[1]);
+//   printString(str);
+//   glRasterPos2f(position[0] - 1, position[1]);
+//   printString(str);
+//   glRasterPos2f(position[0], position[1] + 1);
+//   printString(str);
+//   glRasterPos2f(position[0], position[1] - 1);
+//   printString(str);
 
     glColor3f(colRed, colGreen, colBlue);
     glRasterPos2f(position[0], position[1]);
@@ -647,7 +646,7 @@ void SIM::Coin3D::Quarter::SoQTQuarterAdaptor::draw2DString(
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);// restore default value
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // restore default value
 
     glPopAttrib();
 }
