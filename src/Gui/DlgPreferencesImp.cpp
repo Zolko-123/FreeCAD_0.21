@@ -318,6 +318,30 @@ void DlgPreferencesImp::activateGroupPage(const QString& group, int index)
 }
 
 /**
+ * Activates the page with name \a pageName of the group with name \a group.
+ */
+void DlgPreferencesImp::activateGroupPageByPageName(const QString& group, const QString& pageName)
+{
+    int ct = ui->listBox->count();
+    for (int i=0; i<ct; i++) {
+        QListWidgetItem* item = ui->listBox->item(i);
+        if (item->data(GroupNameRole).toString() == group) {
+            ui->listBox->setCurrentItem(item);
+            auto tabWidget = dynamic_cast<QTabWidget*>(ui->tabWidgetStack->widget(i));
+            if (tabWidget) {
+                for (int pageNumber = 0; pageNumber < tabWidget->count(); pageNumber++) {
+                    auto prefPage = qobject_cast<PreferencePage*>(tabWidget->widget(pageNumber));
+                    if (prefPage && prefPage->property("PageName").toString() == pageName) {
+                        tabWidget->setCurrentIndex(pageNumber);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
  * Returns the group name \a group and position \a index of the active page.
  */
 void DlgPreferencesImp::activeGroupPage(QString& group, int& index) const

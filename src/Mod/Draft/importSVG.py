@@ -59,6 +59,7 @@ import DraftVecUtils
 from FreeCAD import Vector
 from draftutils.translate import translate
 from draftutils.messages import _msg, _wrn, _err
+from builtins import open as pyopen
 
 if FreeCAD.GuiUp:
     from PySide import QtGui
@@ -72,9 +73,6 @@ else:
     gui = False
     draftui = None
 
-# Save the native open function to avoid collisions
-if open.__module__ in ['__builtin__', 'io']:
-    pythonopen = open
 
 svgcolors = {
     'Pink': (255, 192, 203),
@@ -413,7 +411,7 @@ def getsize(length, mode='discard', base=1):
         }
 
     # Extract a number from a string like '+56215.14565E+6mm'
-    _num = '([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)'
+    _num = '([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)'
     _unit = '(px|pt|pc|mm|cm|in|em|ex|%)?'
     _full_num = _num + _unit
     number, exponent, unit = re.findall(_full_num, length)[0]
@@ -729,7 +727,7 @@ class svgHandler(xml.sax.ContentHandler):
             if 'inkscape:version' in data:
                 inks_doc_name = attrs.getValue('sodipodi:docname')
                 inks_full_ver = attrs.getValue('inkscape:version')
-                inks_ver_pars = re.search("\d+\.\d+", inks_full_ver)
+                inks_ver_pars = re.search("\\d+\\.\\d+", inks_full_ver)
                 if inks_ver_pars is not None:
                     inks_ver_f = float(inks_ver_pars.group(0))
                 else:
@@ -932,10 +930,10 @@ class svgHandler(xml.sax.ContentHandler):
 
             _op = '([mMlLhHvVaAcCqQsStTzZ])'
             _op2 = '([^mMlLhHvVaAcCqQsStTzZ]*)'
-            _command = '\s*?' + _op + '\s*?' + _op2 + '\s*?'
+            _command = '\\s*?' + _op + '\\s*?' + _op2 + '\\s*?'
             pathcommandsre = re.compile(_command, re.DOTALL)
 
-            _num = '[-+]?[0-9]*\.?[0-9]+'
+            _num = '[-+]?[0-9]*\\.?[0-9]+'
             _exp = '([eE][-+]?[0-9]+)?'
             _point = '(' + _num + _exp + ')'
             pointsre = re.compile(_point, re.DOTALL)
@@ -1617,8 +1615,8 @@ class svgHandler(xml.sax.ContentHandler):
             The translated matrix.
         """
         _op = '(matrix|translate|scale|rotate|skewX|skewY)'
-        _val = '\((.*?)\)'
-        _transf = _op + '\s*?' + _val
+        _val = '\\((.*?)\\)'
+        _transf = _op + '\\s*?' + _val
         transformre = re.compile(_transf, re.DOTALL)
         m = FreeCAD.Matrix()
         for transformation, arguments in transformre.findall(tr):
@@ -1705,8 +1703,8 @@ def getContents(filename, tag, stringmode=False):
     if stringmode:
         contents = filename
     else:
-        # Use the native Python open which was saved as `pythonopen`
-        f = pythonopen(filename)
+        # Use the native Python open which was saved as `pyopen`
+        f = pyopen(filename)
         contents = f.read()
         f.close()
 
@@ -1717,7 +1715,7 @@ def getContents(filename, tag, stringmode=False):
     searchpat = '<' + tag + '.*?</' + tag + '>'
     tags = re.findall(searchpat, contents)
     for t in tags:
-        tagid = re.findall('id="(.*?)"', t)
+        tagid = re.findall(r'id="(.*?)"', t)
         if tagid:
             tagid = tagid[0]
         else:
@@ -1750,8 +1748,8 @@ def open(filename):
     parser.setContentHandler(svgHandler())
     parser._cont_handler.doc = doc
 
-    # Use the native Python open which was saved as `pythonopen`
-    f = pythonopen(filename)
+    # Use the native Python open which was saved as `pyopen`
+    f = pyopen(filename)
     parser.parse(f)
     f.close()
     doc.recompute()
@@ -1789,8 +1787,8 @@ def insert(filename, docname):
     parser.setContentHandler(svgHandler())
     parser._cont_handler.doc = doc
 
-    # Use the native Python open which was saved as `pythonopen`
-    parser.parse(pythonopen(filename))
+    # Use the native Python open which was saved as `pyopen`
+    parser.parse(pyopen(filename))
     doc.recompute()
 
 
@@ -1859,8 +1857,8 @@ def export(exportList, filename):
     sizey = maxy - miny
     miny += margin
 
-    # Use the native Python open which was saved as `pythonopen`
-    svg = pythonopen(filename, 'w')
+    # Use the native Python open which was saved as `pyopen`
+    svg = pyopen(filename, 'w')
 
     # Write header.
     # We specify the SVG width and height in FreeCAD's physical units (mm),

@@ -24,7 +24,7 @@ __title__ = "FreeCAD material card importer"
 __author__ = "Juergen Riegel"
 __url__ = "https://www.freecad.org"
 
-
+import codecs
 import os
 
 import FreeCAD
@@ -33,11 +33,6 @@ from materialtools.cardutils import get_material_template
 
 if FreeCAD.GuiUp:
     from PySide import QtGui
-
-
-# to distinguish python built-in open function from the one declared below
-if open.__module__ in ['__builtin__', 'io']:
-    pythonopen = open
 
 
 def open(filename):
@@ -114,7 +109,7 @@ def read(filename):
 
     # print(filename)
     card_name_file = os.path.splitext(os.path.basename(filename))[0]
-    f = pythonopen(filename, encoding="utf8")
+    f = codecs.open(filename, encoding="utf8")
     try:
         content = f.readlines()
         # print(len(content))
