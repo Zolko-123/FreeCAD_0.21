@@ -54,6 +54,45 @@
 
 void PrintInitHelp(void);
 
+/*
+ _____               ____    _    ____
+|  ___| __ ___  ___ / ___|  / \  |  _ \
+| |_ | '__/ _ \/ _ \ |     / _ \ | | | |
+|  _|| | |  __/  __/ |___ / ___ \| |_| |
+|_|  |_|  \___|\___|\____/_/   \_\____/
+
+ ______              _____          _____
+|  ____|            / ____|   /\   |  __ \
+| |__ _ __ ___  ___| |       /  \  | |  | |
+|  __| '__/ _ \/ _ \ |      / /\ \ | |  | |
+| |  | | |  __/  __/ |____ / ____ \| |__| |
+|_|  |_|  \___|\___|\_____/_/    \_\_____/
+
+ ______              _____        _____  
+|  ____|            / ____|  /\  |  __ \  
+| |__ _ __ ___  ___| |      /  \ | |  | |  
+|  __| '__/ _ \/ _ \ |     / /\ \| |  | |  
+| |  | | |  __/  __/ |____/ ____ \ |__| |
+|_|  |_|  \___|\___|\_____|/    \_\____/
+
+┌────────────────────────────────────────────┐
+│   _____               ____    _    ____    │
+│  |  ___| __ ___  ___ / ___|  / \  |  _ \   │
+│  | |_ | '__/ _ \/ _ \ |     / _ \ | | | |  │
+│  |  _|| | |  __/  __/ |___ / ___ \| |_| |  │
+│  |_|  |_|  \___|\___|\____/_/   \_\____/   │
+│                                            │
+└────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────┐
+│       ______               _________    ____     │
+│      / ____/_______  ___  / ____/   |  / __ \    │
+│     / /_  / ___/ _ \/ _ \/ /   / /| | / / / /    │
+│    / __/ / /  /  __/  __/ /___/ ___ |/ /_/ /     │
+│   /_/   /_/   \___/\___/\____/_/  |_/_____/      │
+│                                                  │
+└──────────────────────────────────────────────────┘
+
 const char sBanner[] = "\xc2\xa9 Juergen Riegel, Werner Mayer, Yorik van Havre and others 2001-2023\n"\
 "FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.\n"\
 "FreeCAD wouldn't be possible without FreeCAD community.\n"\
@@ -64,6 +103,18 @@ const char sBanner[] = "\xc2\xa9 Juergen Riegel, Werner Mayer, Yorik van Havre a
 "  #     #   #### ####  #    #     # #   # \n" \
 "  #     #   #    #     #    #     # #   #  ##  ##  ##\n" \
 "  #     #   #### ####   ### #     # ####   ##  ##  ##\n\n" ;
+*/
+
+const char sBanner[] =  "Welcome to FreeCAD ! \n"\
+                        "FreeCAD is open-source software licensed under the terms of LGPL2+ license\n"\
+                        "   ______              _____        _____   \n" \
+                        "  |  ____|            / ____|  /\\  |  __ \\  \n" \
+                        "  | |__ _ __ ___  ___| |      /  \\ | |  | | \n" \
+                        "  |  __| '__/ _ \\/ _ \\ |     / /\\ \\| |  | | \n" \
+                        "  | |  | | |  __/  __/ |____/ ____ \\ |__| | \n" \
+                        "  |_|  |_|  \\___|\\___|\\_____|/    \\_\\____/  \n" \
+                        "  \n" ;
+
 
 #if defined(_MSC_VER)
 void InitMiniDumpWriter(const std::string&);
@@ -160,8 +211,10 @@ int main( int argc, char ** argv )
     App::Application::Config()["StartWorkbench"] = "StartWorkbench";
     //App::Application::Config()["HiddenDockWindow"] = "Property editor";
     App::Application::Config()["SplashAlignment" ] = "Bottom|Left";
-    App::Application::Config()["SplashTextColor" ] = "#8aadf4"; // light blue
-    App::Application::Config()["SplashInfoColor" ] = "#8aadf4"; // light blue 
+    //App::Application::Config()["SplashTextColor" ] = "#8aadf4"; // light blue
+    //App::Application::Config()["SplashInfoColor" ] = "#8aadf4"; // light blue 
+    App::Application::Config()["SplashTextColor" ] = "#ffffff"; // white
+    App::Application::Config()["SplashInfoColor" ] = "#ffffff"; // white
     App::Application::Config()["SplashInfoPosition" ] = "6,75";
 
     QGuiApplication::setDesktopFileName(QStringLiteral("org.freecad.FreeCAD.desktop"));
