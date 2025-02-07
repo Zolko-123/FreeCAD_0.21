@@ -79,6 +79,8 @@ void _setLineAttributes(TechDraw::CosmeticEdge* cosEdge);
 void _setLineAttributes(TechDraw::CenterLine* cosEdge);
 void _setLineAttributes(TechDraw::CosmeticEdge* cosEdge, int style, float weight, App::Color color);
 void _setLineAttributes(TechDraw::CenterLine* cosEdge, int style, float weight, App::Color color);
+void _setCenterLineAttributes(TechDraw::CosmeticEdge* cosEdge);
+void _setThreadLineAttributes(TechDraw::CosmeticEdge* cosEdge);
 float _getAngle(Base::Vector3d center, Base::Vector3d point);
 std::vector<Base::Vector3d> _getVertexPoints(std::vector<std::string> SubNames,
                                              TechDraw::DrawViewPart* objFeat);
@@ -124,7 +126,7 @@ void execHoleCircle(Gui::Command* cmd)
         std::make_shared<TechDraw::Circle>(bigCenter / scale, bigRadius / scale);
     std::string bigCircleTag = objFeat->addCosmeticEdge(bigCircle);
     TechDraw::CosmeticEdge* ceCircle = objFeat->getCosmeticEdge(bigCircleTag);
-    _setLineAttributes(ceCircle);
+    _setCenterLineAttributes(ceCircle);
     for (const TechDraw::CirclePtr& oneCircle : Circles) {
         Base::Vector3d oneCircleCenter = oneCircle->center;
         float oneRadius = oneCircle->radius;
@@ -135,7 +137,7 @@ void execHoleCircle(Gui::Command* cmd)
         endPt.y = -endPt.y;
         std::string oneLineTag = objFeat->addCosmeticEdge(startPt / scale, endPt / scale);
         TechDraw::CosmeticEdge* ceLine = objFeat->getCosmeticEdge(oneLineTag);
-        _setLineAttributes(ceLine);
+        _setCenterLineAttributes(ceLine);
     }
     cmd->getSelection().clearSelection();
     objFeat->refreshCEGeoms();
@@ -206,15 +208,9 @@ void execCircleCenterLines(Gui::Command* cmd)
                 std::string line1tag = objFeat->addCosmeticEdge(right / scale, left / scale);
                 std::string line2tag = objFeat->addCosmeticEdge(top / scale, bottom / scale);
                 TechDraw::CosmeticEdge* horiz = objFeat->getCosmeticEdge(line1tag);
-                // _setLineAttributes(horiz);
-                horiz->m_format.m_style  = 4; // dashdot
-                horiz->m_format.m_weight = TechDraw::LineGroup::getDefaultWidth("Thin");
-                horiz->m_format.m_color  = _getActiveLineAttributes().getColorValue();
+                _setCenterLineAttributes(horiz);
                 TechDraw::CosmeticEdge* vert = objFeat->getCosmeticEdge(line2tag);
-                // _setLineAttributes(vert);
-                vert->m_format.m_style   = 4; // dashdot
-                vert->m_format.m_weight  = TechDraw::LineGroup::getDefaultWidth("Thin");
-                vert->m_format.m_color   = _getActiveLineAttributes().getColorValue();
+                _setCenterLineAttributes(vert);
             }
         }
     }
@@ -2033,7 +2029,7 @@ void _createThreadCircle(std::string Name, TechDraw::DrawViewPart* objFeat, floa
             std::make_shared<TechDraw::AOC>(center / scale, radius * factor / scale, 255.0, 165.0);
         std::string arcTag = objFeat->addCosmeticEdge(threadArc);
         TechDraw::CosmeticEdge* arc = objFeat->getCosmeticEdge(arcTag);
-        _setLineAttributes(arc);
+        _setThreadLineAttributes(arc);
     }
 }
 
@@ -2081,42 +2077,59 @@ void _createThreadLines(std::vector<std::string> SubNames, TechDraw::DrawViewPar
             objFeat->addCosmeticEdge((start1 + delta) / scale, (end1 + delta) / scale);
         TechDraw::CosmeticEdge* cosTag0 = objFeat->getCosmeticEdge(line0Tag);
         TechDraw::CosmeticEdge* cosTag1 = objFeat->getCosmeticEdge(line1Tag);
-        _setLineAttributes(cosTag0);
-        _setLineAttributes(cosTag1);
+        _setThreadLineAttributes(cosTag0);
+        _setThreadLineAttributes(cosTag1);
     }
 }
 
 void _setLineAttributes(TechDraw::CosmeticEdge* cosEdge)
 {
     // set line attributes of a cosmetic edge
-    cosEdge->m_format.m_style = _getActiveLineAttributes().getStyle();
+    cosEdge->m_format.m_style  = _getActiveLineAttributes().getStyle();
     cosEdge->m_format.m_weight = _getActiveLineAttributes().getWidthValue();
-    cosEdge->m_format.m_color = _getActiveLineAttributes().getColorValue();
+    cosEdge->m_format.m_color  = _getActiveLineAttributes().getColorValue();
 }
 
 void _setLineAttributes(TechDraw::CenterLine* cosEdge)
 {
     // set line attributes of a cosmetic edge
-    cosEdge->m_format.m_style = _getActiveLineAttributes().getStyle();
+    cosEdge->m_format.m_style  = _getActiveLineAttributes().getStyle();
     cosEdge->m_format.m_weight = _getActiveLineAttributes().getWidthValue();
-    cosEdge->m_format.m_color = _getActiveLineAttributes().getColorValue();
+    cosEdge->m_format.m_color  = _getActiveLineAttributes().getColorValue();
 }
 
 void _setLineAttributes(TechDraw::CosmeticEdge* cosEdge, int style, float weight, App::Color color)
 {
     // set line attributes of a cosmetic edge
-    cosEdge->m_format.m_style = style;
+    cosEdge->m_format.m_style  = style;
     cosEdge->m_format.m_weight = weight;
-    cosEdge->m_format.m_color = color;
+    cosEdge->m_format.m_color  = color;
 }
 
 void _setLineAttributes(TechDraw::CenterLine* cosEdge, int style, float weight, App::Color color)
 {
     // set line attributes of a centerline
-    cosEdge->m_format.m_style = style;
+    cosEdge->m_format.m_style  = style;
     cosEdge->m_format.m_weight = weight;
-    cosEdge->m_format.m_color = color;
+    cosEdge->m_format.m_color  = color;
 }
+
+void _setCenterLineAttributes(TechDraw::CosmeticEdge* cosEdge)
+{
+    // set line attributes centerline
+    cosEdge->m_format.m_style  = 4;  // dashdot
+    cosEdge->m_format.m_weight = TechDraw::LineGroup::getDefaultWidth("Thin");
+    cosEdge->m_format.m_color  = _getActiveLineAttributes().getColorValue();
+}
+
+void _setThreadLineAttributes(TechDraw::CosmeticEdge* cosEdge)
+{
+    // set line attributes for cosmetic thread
+    cosEdge->m_format.m_style  = 1;  // continuos
+    cosEdge->m_format.m_weight = TechDraw::LineGroup::getDefaultWidth("Thin");
+    cosEdge->m_format.m_color  = _getActiveLineAttributes().getColorValue();
+}
+
 }// namespace TechDrawGui
 
 //------------------------------------------------------------------------------
