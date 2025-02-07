@@ -52,6 +52,7 @@
 #include <Mod/TechDraw/App/DrawViewBalloon.h>
 #include <Mod/TechDraw/App/DrawViewPart.h>
 #include <Mod/TechDraw/App/DrawViewSection.h>
+#include <Mod/TechDraw/App/LineGroup.h>
 
 #include "DrawGuiUtil.h"
 #include "QGSPage.h"
@@ -205,9 +206,15 @@ void execCircleCenterLines(Gui::Command* cmd)
                 std::string line1tag = objFeat->addCosmeticEdge(right / scale, left / scale);
                 std::string line2tag = objFeat->addCosmeticEdge(top / scale, bottom / scale);
                 TechDraw::CosmeticEdge* horiz = objFeat->getCosmeticEdge(line1tag);
-                _setLineAttributes(horiz);
+                // _setLineAttributes(horiz);
+                horiz->m_format.m_style  = 4; // dashdot
+                horiz->m_format.m_weight = TechDraw::LineGroup::getDefaultWidth("Thin");
+                horiz->m_format.m_color  = _getActiveLineAttributes().getColorValue();
                 TechDraw::CosmeticEdge* vert = objFeat->getCosmeticEdge(line2tag);
-                _setLineAttributes(vert);
+                // _setLineAttributes(vert);
+                vert->m_format.m_style   = 4; // dashdot
+                vert->m_format.m_weight  = TechDraw::LineGroup::getDefaultWidth("Thin");
+                vert->m_format.m_color   = _getActiveLineAttributes().getColorValue();
             }
         }
     }
